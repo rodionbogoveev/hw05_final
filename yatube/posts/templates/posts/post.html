@@ -2,7 +2,6 @@
 {% block title %}Записи пользователя {{ author.get_full_name }}{% endblock %}
 {% block header %}{{ author.get_full_name }}{% endblock %}
 {% block content %}
-<main role="main" class="container">
     <div class="row">
         <div class="col-md-3 mb-3 mt-1">
             <div class="card">
@@ -19,8 +18,8 @@
                 <ul class="list-group list-group-flush">
                     <li class="list-group-item">
                         <div class="h6 text-muted">
-                            Подписчиков: XXX <br />
-                            Подписан: XXX
+                            Подписчиков: {{ following }} <br />
+                            Подписок: {{ follower }}
                         </div>
                     </li>
                     <li class="list-group-item">
@@ -29,6 +28,23 @@
                             Записей: {{ paginator.count }}
                         </div>
                     </li>
+                    {% if user.is_authenticated %}
+                        {% if user != author %}
+                            <li class="list-group-item">
+                                {% if is_following %}
+                                    <a  class="btn btn-lg btn-light"
+                                        href="{% url 'profile_unfollow' author.username %}" role="button">
+                                        Отписаться
+                                    </a>
+                                {% else %}
+                                    <a  class="btn btn-lg btn-primary"
+                                        href="{% url 'profile_follow' author.username %}" role="button">
+                                        Подписаться
+                                    </a>
+                                {% endif %}
+                            </li>
+                        {% endif %}
+                    {% endif %}
                 </ul>
             </div>
         </div>
@@ -41,5 +57,4 @@
             </div>
         </div>
     </div>
-</main>
 {% endblock %}

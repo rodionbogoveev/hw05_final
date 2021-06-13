@@ -9,7 +9,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
-from ..models import Group, Post
+from ..models import Follow, Group, Post
 
 User = get_user_model()
 
@@ -21,6 +21,7 @@ class PostsViewTests(TestCase):
         super().setUpClass()
         settings.MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
         cls.user = User.objects.create(username='rodion')
+        cls.user_author = User.objects.create(username='dicaprio')
         cls.group = Group.objects.create(
             title='Название',
             slug='test_slug',
@@ -44,6 +45,10 @@ class PostsViewTests(TestCase):
             group=cls.group,
             image=cls.uploaded
         )
+        # cls.author_post = Post.objects.create(
+        #     text='Я - Леонардо Ди Каприо',
+        #     author=cls.user_author
+        # )
         cls.another_group = Group.objects.create(
             title='Другое название',
             slug='test_another_slug',
@@ -59,6 +64,8 @@ class PostsViewTests(TestCase):
         self.guest_client = Client()
         self.authorized_client = Client()
         self.authorized_client.force_login(self.user)
+        self.authorized_author = Client()
+        self.authorized_author.force_login(self.user_author)
 
     def test_pages_use_correct_template(self):
         """URL-адрес использует соответствующий шаблон."""
@@ -170,6 +177,28 @@ class PostsViewTests(TestCase):
         response_three = self.guest_client.get(reverse('index')).content
         self.assertEqual(response_one, response_second)
         self.assertNotEqual(response_second, response_three)
+
+    def test_auth_user_can_follow(self):
+        """Авторизованный пользователь может подписываться
+        на других пользователей."""
+        self.authorized_client.get(reverse(
+            'profile_follow',
+            kwargs={'username': self.user_author.username}))
+        get_follow = Follow.objects.filter(
+            user=self.user, author=self.user_author).exists()
+        self.assertTrue(get_follow)
+
+    def test_not_auth_user_can_follow(self):
+        """Авторизованный пользователь может удалять
+        других пользователей из подписок."""
+        Follow.objects.create(
+            user=self.user, author=self.user_author)
+        self.authorized_client.get(reverse(
+            'profile_unfollow',
+            kwargs={'username': self.user_author.username}))
+        get_follow = Follow.objects.filter(
+            user=self.user, author=self.user_author).exists()
+        self.assertFalse(get_follow)
 
     def post_context(self, post):
         self.assertEqual(post, self.post)

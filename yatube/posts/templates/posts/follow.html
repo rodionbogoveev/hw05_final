@@ -1,12 +1,12 @@
 {% extends 'posts/base.html' %}
-{% block title %}Главная страница{% endblock %}
-{% block header %}Лента{% endblock %}
+{% block title %}Страница ваших подписок{% endblock %}
+{% block header %}Ваши подписки{% endblock %}
 
 {% block content %}
-    {% include 'posts/menu.html' with index=True %}
+    {% include 'posts/menu.html' with follow=True %}
     <!-- Вывод ленты записей -->
     {% load cache %}
-    {% cache 20 page %}
+    {% cache 20 follow_page %}
     {% for post in page %}
     {% include 'posts/post_item.html' with post=post %}
     {% endfor %}

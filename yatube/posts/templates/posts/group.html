@@ -5,12 +5,10 @@
 {% block content %}
 
     <p>{{ group.description }}</p>
-    <div class="container">
-        <!-- Вывод ленты записей -->
-        {% for post in page %}
-        {% include 'posts/post_item.html' with post=post %}
-        {% endfor %}
-    </div>
+    <!-- Вывод ленты записей -->
+    {% for post in page %}
+    {% include 'posts/post_item.html' with post=post %}
+    {% endfor %}
 
     <!-- Вывод паджинатора -->
     {% include 'posts/paginator.html' %}
