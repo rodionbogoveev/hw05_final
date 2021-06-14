@@ -9,7 +9,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
-from ..models import Follow, Group, Post
+from ..models import Comment, Follow, Group, Post
 
 User = get_user_model()
 
@@ -21,7 +21,7 @@ class PostsViewTests(TestCase):
         super().setUpClass()
         settings.MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
         cls.user = User.objects.create(username='rodion')
-        cls.user_author = User.objects.create(username='dicaprio')
+        cls.author = User.objects.create(username='dicaprio')
         cls.group = Group.objects.create(
             title='Название',
             slug='test_slug',
@@ -45,10 +45,6 @@ class PostsViewTests(TestCase):
             group=cls.group,
             image=cls.uploaded
         )
-        # cls.author_post = Post.objects.create(
-        #     text='Я - Леонардо Ди Каприо',
-        #     author=cls.user_author
-        # )
         cls.another_group = Group.objects.create(
             title='Другое название',
             slug='test_another_slug',
@@ -65,7 +61,7 @@ class PostsViewTests(TestCase):
         self.authorized_client = Client()
         self.authorized_client.force_login(self.user)
         self.authorized_author = Client()
-        self.authorized_author.force_login(self.user_author)
+        self.authorized_author.force_login(self.author)
 
     def test_pages_use_correct_template(self):
         """URL-адрес использует соответствующий шаблон."""
@@ -181,24 +177,84 @@ class PostsViewTests(TestCase):
     def test_auth_user_can_follow(self):
         """Авторизованный пользователь может подписываться
         на других пользователей."""
-        self.authorized_client.get(reverse(
-            'profile_follow',
-            kwargs={'username': self.user_author.username}))
-        get_follow = Follow.objects.filter(
-            user=self.user, author=self.user_author).exists()
+        get_follow = PostsViewTests.user_follows_author(self)
         self.assertTrue(get_follow)
 
     def test_not_auth_user_can_follow(self):
         """Авторизованный пользователь может удалять
         других пользователей из подписок."""
         Follow.objects.create(
-            user=self.user, author=self.user_author)
+            user=self.user, author=self.author)
         self.authorized_client.get(reverse(
             'profile_unfollow',
-            kwargs={'username': self.user_author.username}))
+            kwargs={'username': self.author.username}))
         get_follow = Follow.objects.filter(
-            user=self.user, author=self.user_author).exists()
+            user=self.user, author=self.author).exists()
         self.assertFalse(get_follow)
+
+    def test_post_is_visible_for_follower(self):
+        """Новая запись пользователя появляется в ленте тех,
+        кто на него подписан."""
+        PostsViewTests.user_follows_author(self)
+        author_post = PostsViewTests.author_creates_post(self)
+        response = self.authorized_client.get(
+            reverse('follow_index')).context['page']
+        self.assertIn(author_post, response)
+
+    def test_post_is_not_visible_for_not_follower(self):
+        """Новая запись пользователя не появляется в ленте тех,
+        кто на него не подписан."""
+        PostsViewTests.user_follows_author(self)
+        author_post = PostsViewTests.author_creates_post(self)
+        another_user = User.objects.create(username='another_user')
+        self.another_user = Client()
+        self.another_user.force_login(another_user)
+        response = self.another_user.get(
+            reverse('follow_index')).context['page']
+        self.assertNotIn(author_post, response)
+
+    def user_follows_author(self):
+        """Пользователь подписывается на автора."""
+        self.authorized_client.get(reverse(
+            'profile_follow',
+            kwargs={'username': self.author.username}))
+        get_follow = Follow.objects.filter(
+            user=self.user, author=self.author)
+        return get_follow
+
+    def author_creates_post(self):
+        """Автор создает пост."""
+        author_post = Post.objects.create(
+            text='Я - Леонардо Ди Каприо',
+            author=self.author
+        )
+        return author_post
+
+    def test_authorized_user_can_comment_post(self):
+        """Авторизованный пользователь может комментировать пост."""
+        form_data = {'text': 'Комментарий'}
+        self.authorized_client.post(
+            reverse('add_comment', kwargs={
+                'username': self.user.username,
+                'post_id': self.post.id}),
+            data=form_data,
+            follow=True)
+        get_comment = Comment.objects.filter(post=self.post, author=self.user,
+                                             text='Комментарий')
+        self.assertTrue(get_comment)
+
+    def test_non_authorized_user_cannot_comment_post(self):
+        """Неавторизованный пользователь не может комментировать пост."""
+        form_data = {'text': 'Другой комментарий'}
+        self.guest_client.post(
+            reverse('add_comment', kwargs={
+                'username': self.user.username,
+                'post_id': self.post.id}),
+            data=form_data,
+            follow=True)
+        get_comment = Comment.objects.filter(post=self.post,
+                                             text='Другой комментарий')
+        self.assertFalse(get_comment)
 
     def post_context(self, post):
         self.assertEqual(post, self.post)

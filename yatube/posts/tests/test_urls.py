@@ -52,8 +52,8 @@ class PostsURLTests(TestCase):
     def setUp(self):
         self.guest_client = Client()
         self.authorized_client = Client()
-        self.authorized_another_client = Client()
         self.authorized_client.force_login(self.user)
+        self.authorized_another_client = Client()
         self.authorized_another_client.force_login(self.another_user)
 
     def test_url_is_available_the_users_access_rights(self):
