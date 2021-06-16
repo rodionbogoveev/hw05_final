@@ -57,6 +57,7 @@ class PostsViewTests(TestCase):
         return super().tearDownClass()
 
     def setUp(self):
+        cache.clear()
         self.guest_client = Client()
         self.authorized_client = Client()
         self.authorized_client.force_login(self.user)
@@ -161,18 +162,18 @@ class PostsViewTests(TestCase):
 
     def test_index_page_cache_works_correctly(self):
         """Кэширование главной страницы работает корректно."""
-        response_one = self.guest_client.get(reverse('index')).content
+        content = self.guest_client.get(reverse('index')).content
         Post.objects.create(
             text='Другой текст',
             author=self.user,
             group=self.group,
             image=self.uploaded
         )
-        response_second = self.guest_client.get(reverse('index')).content
+        cached_content = self.guest_client.get(reverse('index')).content
         cache.clear()
-        response_three = self.guest_client.get(reverse('index')).content
-        self.assertEqual(response_one, response_second)
-        self.assertNotEqual(response_second, response_three)
+        refresh_content = self.guest_client.get(reverse('index')).content
+        self.assertEqual(content, cached_content)
+        self.assertNotEqual(cached_content, refresh_content)
 
     def test_auth_user_can_follow(self):
         """Авторизованный пользователь может подписываться

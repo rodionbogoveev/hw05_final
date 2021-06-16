@@ -4,6 +4,9 @@
 
 {% block content %}
     {% include 'posts/menu.html' with index=True %}
+    <br>
+    <!-- Вывод паджинатора -->
+    {% include 'posts/paginator.html' %}
     <!-- Вывод ленты записей -->
     {% load cache %}
     {% cache 20 index_page page.number %}

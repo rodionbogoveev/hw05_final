@@ -106,8 +106,7 @@ def add_comment(request, username, post_id):
 
 @login_required
 def follow_index(request):
-    user = get_object_or_404(User, username=request.user.username)
-    post_list = Post.objects.filter(author__following__user=user)
+    post_list = Post.objects.filter(author__following__user=request.user)
     paginator = Paginator(post_list, 10)
     page_number = request.GET.get('page')
     page = paginator.get_page(page_number)
@@ -116,26 +115,15 @@ def follow_index(request):
 
 @login_required
 def profile_follow(request, username):
-    user = get_object_or_404(User, username=request.user.username)
     author = get_object_or_404(User, username=username)
-    get_follow = Follow.objects.filter(user=user, author=author).exists()
-    if user != author and get_follow is False:
-        Follow.objects.create(user=user, author=author)
+    if request.user != author:
+        Follow.objects.get_or_create(user=request.user, author=author)
     return redirect('profile', username)
 
 
 @login_required
 def profile_unfollow(request, username):
-    user = get_object_or_404(User, username=request.user.username)
     author = get_object_or_404(User, username=username)
-    if user != author:
-        Follow.objects.filter(user=user, author=author).delete()
+    if request.user != author:
+        Follow.objects.filter(user=request.user, author=author).delete()
     return redirect('profile', username)
-
-
-def page_not_found(request, exception):
-    return render(request, 'misc/404.html', {'path': request.path}, status=404)
-
-
-def server_error(request):
-    return render(request, 'misc/500.html', status=500)
