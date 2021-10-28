@@ -5,12 +5,15 @@ User = get_user_model()
 
 
 class Group(models.Model):
-    title = models.CharField(max_length=200)
+    title = models.CharField('Название', max_length=200)
     slug = models.SlugField(unique=True)
-    description = models.TextField()
+    description = models.TextField('Описание')
 
     def __str__(self):
         return self.title
+
+    class Meta:
+        verbose_name_plural = 'Группы'
 
 
 class Post(models.Model):
@@ -29,6 +32,7 @@ class Post(models.Model):
 
     class Meta:
         ordering = ('-pub_date',)
+        verbose_name_plural = 'Посты'
 
 
 class Comment(models.Model):
