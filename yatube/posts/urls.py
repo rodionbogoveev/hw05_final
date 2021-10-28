@@ -2,6 +2,7 @@ from django.urls import path
 
 from . import views
 
+
 urlpatterns = [
     # Главная страница
     path('', views.index, name='index'),
@@ -28,3 +29,4 @@ urlpatterns = [
     path('<str:username>/unfollow/', views.profile_unfollow,
          name='profile_unfollow'),
 ]
+
