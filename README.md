@@ -1,3 +1,41 @@
-# hw05_final
+## Описание проекта:
 
-[![CI](https://github.com/yandex-praktikum/hw05_final/actions/workflows/python-app.yml/badge.svg?branch=master)](https://github.com/yandex-praktikum/hw05_final/actions/workflows/python-app.yml)
+Проект YaTube - это социальная сеть для публикации личных дневников.
+
+Пользователь на сайте может создать свою страницу. Если на нее зайти, то можно посмотреть все записи автора. Пользователь может выкладывать посты в сообщество и посмотреть там записи и других авторов.
+
+Пользователи могут заходить на чужие страницы, подписываться на авторов и комментировать их записи.
+
+Автор может выбрать имя и уникальный адрес для своей страницы.
+
+Реализована возможность модерировать записи и блокировать пользователей.
+
+## Как запустить проект:
+
+Клонируйте репозиторий:
+
+```
+git clone https://github.com/rodionbogoveev/hw05_final
+```
+
+Cоздайте и активируйте виртуальное окружение:
+```
+python -m venv venv
+
+source venv/Scripts/activate
+```
+Установите зависимости из файла requirements.txt:
+```
+python -m pip install --upgrade pip
+
+pip install -r requirements.txt
+```
+Выполните миграции:
+```
+python manage.py migrate
+```
+Запустите проект:
+```
+python manage.py runserver
+```
+Проект запущен и доступен по адресу [localhost](http://localhost:8000/).
