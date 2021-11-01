@@ -38,4 +38,4 @@ python manage.py migrate
 ```
 python manage.py runserver
 ```
-Проект запущен и доступен по адресу [localhost](http://localhost:8000/).
+Проект запущен и доступен по адресу [localhost](http://127.0.0.1:8000/).
